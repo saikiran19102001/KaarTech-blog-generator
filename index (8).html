@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaarTech Blog Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #5c0001;
+    --navy-deep: #3d0001;
+    --sky: #9d0102;
+    --sky-soft: #fdeaea;
+    --ink: #2a1a1b;
+    --muted: #7a6566;
+    --line: #ecdede;
+    --paper: #ffffff;
+    --bg: #faf5f5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Public Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, #7d0102 100%);
+    color: #fff;
+    padding: 64px 24px 120px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
+    background-size: 26px 26px;
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+  .brand { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: #ffffff; font-weight: 600; }
+  .hero h1 {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 800;
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1.05;
+    margin: 14px 0 16px;
+    letter-spacing: -0.5px;
+  }
+  .hero p { color: #f1c9c9; font-size: 18px; max-width: 620px; }
+
+  .wrap { max-width: 980px; margin: -72px auto 80px; padding: 0 24px; position: relative; z-index: 2; }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(10,37,64,0.10);
+    padding: 32px;
+    margin-bottom: 28px;
+  }
+  .section-label {
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sky); font-weight: 600; margin-bottom: 6px;
+  }
+  .section-title { font-family: 'Public Sans', sans-serif; font-size: 24px; font-weight: 700; color: var(--navy); margin-bottom: 18px; }
+
+  .topics { display: grid; gap: 12px; }
+  .search-row { display: flex; gap: 12px; margin-bottom: 18px; }
+  .search-row input { flex: 1; }
+  @media (max-width: 560px) { .search-row { flex-direction: column; } }
+  .topic {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    background: #fff;
+  }
+  .topic:hover { border-color: var(--sky); background: var(--sky-soft); transform: translateY(-1px); }
+  .topic-title { font-weight: 600; color: var(--navy); font-size: 16px; }
+  .topic-reason { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .topics-loading, .topics-error { color: var(--muted); font-size: 15px; padding: 8px 0; }
+  .topics-error { color: #c0392b; }
+
+  .kw-heading { font-weight: 600; color: var(--navy); font-size: 15px; margin: 22px 0 10px; }
+  .kw-grid { display: grid; gap: 10px; }
+  .kw {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; cursor: pointer; background: #fff;
+    transition: all 0.15s ease;
+  }
+  .kw:hover { border-color: var(--sky); background: var(--sky-soft); }
+  .kw-term { font-weight: 600; color: var(--ink); font-size: 15px; }
+  .kw-stats { display: flex; gap: 14px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .kw-stats b { color: var(--navy); font-weight: 600; }
+
+  form { display: grid; gap: 18px; }
+  .field { display: grid; gap: 6px; }
+  label { font-size: 14px; font-weight: 500; color: var(--ink); }
+  input, select {
+    font-family: inherit; font-size: 15px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff; color: var(--ink);
+    transition: border 0.15s ease;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--sky); box-shadow: 0 0 0 3px var(--sky-soft); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+
+  .btn {
+    background: var(--sky);
+    color: #fff; border: none;
+    padding: 15px 22px;
+    font-family: inherit; font-size: 16px; font-weight: 600;
+    border-radius: 10px; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover { background: #7d0102; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { background: #cba0a1; cursor: not-allowed; }
+
+  .status { margin-top: 18px; padding: 16px; border-radius: 10px; font-size: 15px; display: none; }
+  .status.show { display: block; }
+  .status.working { background: var(--sky-soft); color: var(--navy); }
+  .status.done { background: #e8f7ee; color: #1a7a44; }
+  .status.fail { background: #fdeceA; background: #fdecea; color: #c0392b; }
+  .status a { color: inherit; font-weight: 600; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 0 50px; }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">KaarTech &middot; AI-Led SAP Transformation</div>
+      <h1>Blog Generator</h1>
+      <p>See what's trending in SAP &amp; AI right now, then generate a fully SEO-optimized blog draft in minutes.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Topic search -->
+    <section class="card">
+      <div class="section-label">Discover</div>
+      <div class="section-title">Find trending topics to write about</div>
+      <p style="color:var(--muted); margin-bottom:16px; font-size:15px;">Type a subject and we'll find 5 trending topic ideas for it.</p>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="e.g. SAP supply chain, AI in finance, S/4HANA migration" />
+        <button type="button" class="btn" id="searchBtn">Search Topics</button>
+      </div>
+      <div id="topics" class="topics"></div>
+      <div id="keywords"></div>
+    </section>
+
+    <!-- Form -->
+    <section class="card">
+      <div class="section-label">Create</div>
+      <div class="section-title">Generate your blog</div>
+      <form id="blogForm">
+        <div class="field">
+          <label for="title">Blog Title</label>
+          <input type="text" id="title" name="Blog Title" required placeholder="e.g. AI in SAP Sales">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="primary">Primary Keyword</label>
+            <input type="text" id="primary" name="Primary Keyword" required placeholder="e.g. SAP Sales">
+          </div>
+          <div class="field">
+            <label for="secondary">Secondary Keyword</label>
+            <input type="text" id="secondary" name="Secondary Keyword" placeholder="e.g. order to cash">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="theme">Theme</label>
+            <select id="theme" name="Theme" required>
+              <option value="AI-Led SAP Transformation">AI-Led SAP Transformation</option>
+              <option value="AI-powered S/4HANA & ERP">AI-powered S/4HANA &amp; ERP</option>
+              <option value="AI in Cloud & Platform Services">AI in Cloud &amp; Platform Services</option>
+              <option value="AI-driven Data & Analytics">AI-driven Data &amp; Analytics</option>
+              <option value="AI-enabled Industry Transformation">AI-enabled Industry Transformation</option>
+              <option value="Enterprise AI Use Cases">Enterprise AI Use Cases</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="wordcount">Word Count</label>
+            <input type="number" id="wordcount" name="Word Count" value="1100">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="cta">Call to Action</label>
+            <select id="cta" name="CTA" required>
+              <option value="Contact KaarTech">Contact KaarTech</option>
+              <option value="Explore AI services">Explore AI services</option>
+              <option value="Connect with experts">Connect with experts</option>
+              <option value="Join a webinar">Join a webinar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mode">Publish Mode</label>
+            <select id="mode" name="Publish Mode" required>
+              <option value="Draft">Draft</option>
+              <option value="Publish">Publish</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">Generate Blog Draft</button>
+      </form>
+      <div id="status" class="status"></div>
+    </section>
+  </main>
+
+  <footer>&copy; KaarTech &middot; Powered by your n8n blog automation</footer>
+
+<script>
+  // ====== CONFIG: your n8n webhook URLs ======
+  const SEARCH_URL = "https://saikiran121219.app.n8n.cloud/webhook/search-topics";
+  const GENERATE_URL = "https://saikiran121219.app.n8n.cloud/webhook/generate";
+
+  // ====== Search for topics + keywords ======
+  async function searchTopics() {
+    const box = document.getElementById("topics");
+    const kwBox = document.getElementById("keywords");
+    const term = document.getElementById("searchInput").value.trim();
+    const btn = document.getElementById("searchBtn");
+
+    if (!term) { box.innerHTML = '<div class="topics-error">Please type a subject first.</div>'; return; }
+
+    btn.disabled = true;
+    btn.textContent = "Searching…";
+    box.innerHTML = '<div class="topics-loading">Finding trending topics for "' + term + '"&hellip;</div>';
+    kwBox.innerHTML = "";
+
+    try {
+      const res = await fetch(SEARCH_URL + "?q=" + encodeURIComponent(term));
+      let data = await res.json();
+      if (typeof data === "string") data = JSON.parse(data);
+
+      // Handle both wrapped {topics,keywords} and bare array of topics
+      const topics = Array.isArray(data) ? data : (data.topics || []);
+      const keywords = Array.isArray(data) ? [] : (data.keywords || []);
+
+      // ---- Render topics ----
+      if (!topics.length) {
+        box.innerHTML = '<div class="topics-error">No topics found. Try a different subject.</div>';
+      } else {
+        box.innerHTML = "";
+        topics.forEach(t => {
+          const div = document.createElement("div");
+          div.className = "topic";
+          div.innerHTML = `<div class="topic-title">${t.title || ""}</div>
+                           <div class="topic-reason">${t.reason || ""}</div>`;
+          div.onclick = () => {
+            document.getElementById("title").value = t.title || "";
+            window.scrollTo({ top: document.getElementById("blogForm").offsetTop - 80, behavior: "smooth" });
+          };
+          box.appendChild(div);
+        });
+      }
+
+      // ---- Render keywords (with real data) ----
+      if (keywords.length) {
+        let html = '<div class="kw-heading">Suggested keywords (click to use as Primary Keyword)</div><div class="kw-grid">';
+        keywords.forEach(k => {
+          const term = k.keyword || k.term || "";
+          const vol = (k.search_volume ?? k.volume);
+          const comp = (k.competition ?? k.competition_level);
+          const volTxt = (vol !== undefined && vol !== null) ? `<span><b>${Number(vol).toLocaleString()}</b>/mo</span>` : "";
+          const compTxt = comp ? `<span>comp: <b>${comp}</b></span>` : "";
+          html += `<div class="kw" data-kw="${term.replace(/"/g,'&quot;')}">
+                     <span class="kw-term">${term}</span>
+                     <span class="kw-stats">${volTxt}${compTxt}</span>
+                   </div>`;
+        });
+        html += '</div>';
+        kwBox.innerHTML = html;
+        // click → fill Primary Keyword
+        kwBox.querySelectorAll(".kw").forEach(el => {
+          el.onclick = () => {
+            document.getElementById("primary").value = el.getAttribute("data-kw");
+            window.scrollTo({ top: document.getElementById("blogForm").offsetTop - 80, behavior: "smooth" });
+          };
+        });
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="topics-error">Could not fetch results right now. Please try again.</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Search Topics";
+    }
+  }
+
+  document.getElementById("searchBtn").addEventListener("click", searchTopics);
+  document.getElementById("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchTopics();
+  });
+
+  // ====== Submit the form ======
+  document.getElementById("blogForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("submitBtn");
+    const status = document.getElementById("status");
+    const form = e.target;
+
+    const payload = {};
+    new FormData(form).forEach((v, k) => payload[k] = v);
+
+    btn.disabled = true;
+    btn.textContent = "Generating…";
+    status.className = "status show working";
+    status.textContent = "⏳ Generating your blog draft — this can take up to a minute. Please wait…";
+
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json().catch(() => ({}));
+      status.className = "status show done";
+      const link = result.link || result.url;
+      status.innerHTML = link
+        ? `✅ Done! Your draft is ready: <a href="${link}" target="_blank">View draft</a>`
+        : "✅ Done! Your blog draft has been created — check your WordPress drafts.";
+    } catch (err) {
+      status.className = "status show fail";
+      status.textContent = "⚠️ Something went wrong. Please try again.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Generate Blog Draft";
+    }
+  });
+
+</script>
+</body>
+</html>
